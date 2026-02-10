@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db 
+
+# build output (for later)
+dist/
+build/
+
+#optional: coverage
+coverage/
