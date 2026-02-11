@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import express from "express";
+import express, { application } from "express";
 import cors from "cors";
 import session from "express-session";
 
@@ -15,6 +15,7 @@ import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import productRoutes from "./routes/products.js";
 import cartRoutes from "./routes/carts.js";
+import orderRoutes from "./routes/orders.js";
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/products", productRoutes);
 app.use("/carts/me", requireAuth, cartRoutes);
+app.use("/orders/me", requireAuth, orderRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello from backend");
