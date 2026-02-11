@@ -5,13 +5,17 @@ const router = express();
 
 // get order history for logged in user
 router.get("/", async (req, res) => {
-  const { userId } = req.user.id;
+  const userId = req.user.id;
 
   try {
     const result = await pool.query(
       "SELECT id, status, created_at, modified_at, total_cents FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
       [userId],
     );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
 
     res.json(result.rows);
   } catch (err) {

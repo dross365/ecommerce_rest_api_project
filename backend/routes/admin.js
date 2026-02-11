@@ -90,7 +90,7 @@ router.put("/orders/:orderId/status", async (req, res) => {
   try {
     const result = await pool.query(
       "UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, status",
-      [orderId, status],
+      [status, orderId],
     );
 
     if (result.rowCount === 0) {
@@ -179,7 +179,7 @@ router.delete("/products/:productId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "DELETE FROM products WHERE id = $1 RETURING id",
+      "DELETE FROM products WHERE id = $1 RETURNING id",
       [productId],
     );
 
