@@ -9,6 +9,7 @@ import passport from "./auth/passport.js";
 
 // MIDDLEWARE
 import requireAuth from "./middleware/requireAuth.js";
+import requireAdmin from "./middleware/requireAdmin.js";
 
 // ROUTES
 import authRoutes from "./routes/auth.js";
@@ -16,6 +17,7 @@ import userRoutes from "./routes/users.js";
 import productRoutes from "./routes/products.js";
 import cartRoutes from "./routes/carts.js";
 import orderRoutes from "./routes/orders.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
 
@@ -49,6 +51,7 @@ app.use("/users", userRoutes);
 app.use("/products", productRoutes);
 app.use("/carts/me", requireAuth, cartRoutes);
 app.use("/orders/me", requireAuth, orderRoutes);
+app.use("/admin", requireAuth, requireAdmin, adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello from backend");
