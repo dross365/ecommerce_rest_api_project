@@ -1,5 +1,6 @@
 import express from "express";
 import bcrypt from "bcryptjs";
+import passport from "passport";
 
 import pool from "../db/pool.js";
 
@@ -28,7 +29,7 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      "INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING email, first_name, last_name",
+      "INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name",
       [emailNormalized, hashedPassword, first_name, last_name],
     );
 
@@ -39,46 +40,42 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields required" });
+router.post("/login", (req, res) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      console.error(err.message);
+      return res.status(500).json({ message: "Server error" });
     }
 
-    const emailNormalized = email.trim().toLowerCase();
-
-    const result = await pool.query(
-      "SELECT id, email, password, first_name, last_name FROM users WHERE email = $1",
-      [emailNormalized],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    const user = result.rows[0];
-
-    // check if the user has a password. if not, then their account was created with Google or Facebook
-    if (!user.password) {
+    if (!user)
       return res
-        .status(400)
-        .json({ message: "Please log in using Google or Facebook" });
-    }
+        .status(401)
+        .json({ message: info?.message || "Invalid email or password" });
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Login failed" });
+      }
 
-    if (!isPasswordMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
+      const { password, ...safeUser } = user;
+      return res.json({ message: "Logged In", safeUser });
+    });
+  })(req, res);
+});
 
-    delete user.password; // make sure not to send the hashed password back in the response
-    return res.status(200).json(user);
-  } catch (err) {
-    console.log(err.message);
-    return res.status(500).json({ message: "Server error" });
+router.post("/logout", (req, res) => {
+  req.logout(() => {
+    res.json({ message: "Logged Out" });
+  });
+});
+
+router.get("/me", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ user: null });
   }
+
+  res.json(req.user);
 });
 
 export default router;
